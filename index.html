@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Middle Blocker Development Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ====================================================================
+     FIREBASE SETUP
+     1. Create a free project at https://firebase.google.com
+     2. Enable Authentication -> Sign-in method -> Google
+     3. Enable Firestore Database (start in test mode, then apply the
+        security rule from the instructions you were given)
+     4. Project Settings -> Your apps -> Web app -> copy the config
+        object it shows you, and paste it over the placeholder below.
+     ==================================================================== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+  :root {
+    --bg: #F6F5F1; --surface: #FFFFFF; --surface-2: #EFEDE6;
+    --ink: #161B22; --ink-soft: #4B5259; --line: #DCD9D0;
+    --cobalt: #1F4FD8; --cobalt-ink: #0E2C8A; --flame: #E0481E; --flame-soft: #FDE7DF;
+    --phase1: #1F4FD8; --phase2: #8A5CF6; --phase3: #E0481E;
+    --ok: #1C7C4D; --ok-soft: #E3F3E9;
+    --warn-bg: #FFF4E0; --warn-line: #E8A33D; --rest-bg: #ECEAE3;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151A; --surface: #1A1E25; --surface-2: #20242C;
+      --ink: #EDEEF0; --ink-soft: #A7ADB6; --line: #2C313A;
+      --cobalt: #6E92FF; --cobalt-ink: #AFC1FF; --flame: #FF8259; --flame-soft: #2B1C18;
+      --ok: #4ED08A; --ok-soft: #16261C;
+      --warn-bg: #2B2414; --warn-line: #7A5A1E; --rest-bg: #1D2026;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151A; --surface: #1A1E25; --surface-2: #20242C;
+    --ink: #EDEEF0; --ink-soft: #A7ADB6; --line: #2C313A;
+    --cobalt: #6E92FF; --cobalt-ink: #AFC1FF; --flame: #FF8259; --flame-soft: #2B1C18;
+    --ok: #4ED08A; --ok-soft: #16261C;
+    --warn-bg: #2B2414; --warn-line: #7A5A1E; --rest-bg: #1D2026;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Work Sans", -apple-system, system-ui, sans-serif;
+    line-height: 1.55;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1, h2, h3 { font-family: "Oswald", "Work Sans", sans-serif; font-weight: 600; letter-spacing: 0.01em; color: var(--ink); }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .hero { padding: 48px 20px 28px; border-bottom: 1px solid var(--line); }
+  .hero-inner { max-width: 880px; margin: 0 auto; }
+  .eyebrow { font-family: "Oswald", sans-serif; font-size: 0.95rem; color: var(--flame); font-weight: 600; margin: 0 0 10px; }
+  .hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.05; margin: 0 0 12px; }
+  .hero p.sub { font-size: 1.02rem; color: var(--ink-soft); max-width: 62ch; margin: 0 0 20px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 100px; font-size: 0.86rem; color: var(--ink-soft); }
+  .chip b { color: var(--ink); font-weight: 600; }
+
+  .tracker-bar { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; }
+  .tracker-inner { max-width: 880px; margin: 0 auto; }
+  .tracker-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .tracker-stats { display: flex; gap: 16px; flex-wrap: wrap; order: 1; }
+  .stat { font-size: 0.78rem; color: var(--ink-soft); white-space: nowrap; }
+  .stat b { font-family: "Oswald", sans-serif; font-size: 1.05rem; color: var(--ink); display: block; }
+  .phase-picker { display: flex; gap: 5px; order: 3; flex: 1 1 100%; justify-content: center; }
+  .phase-btn { font-family: "Oswald", sans-serif; font-size: 0.76rem; font-weight: 600; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-soft); padding: 7px 10px; border-radius: 100px; cursor: pointer; flex: 1 1 0; min-width: 0; white-space: nowrap; }
+  .phase-btn[data-active="true"] { color: #fff; border-color: transparent; }
+  .phase-btn[data-phase="1"][data-active="true"] { background: var(--phase1); }
+  .phase-btn[data-phase="2"][data-active="true"] { background: var(--phase2); }
+  .phase-btn[data-phase="3"][data-active="true"] { background: var(--phase3); }
+
+  .auth-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--ink-soft); order: 2; flex-wrap: wrap; min-width: 0; }
+  .auth-row span { overflow-wrap: anywhere; }
+  .auth-btn {
+    font-family: "Oswald", sans-serif; font-weight: 600; font-size: 0.8rem;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+    padding: 8px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  }
+  .auth-btn.google { display: inline-flex; align-items: center; gap: 8px; }
+
+  @media (max-width: 600px) {
+    .tracker-row { flex-direction: column; align-items: stretch; }
+    .tracker-stats { order: 1; justify-content: space-between; }
+    .auth-row { order: 2; justify-content: space-between; }
+    .phase-picker { order: 3; }
+    .hero { padding: 36px 16px 24px; }
+    .wrap { padding: 0 16px 60px; }
+    .day-head h3 { font-size: 0.92rem; }
+  }
+
+  .gate-card {
+    margin: 10px 0 0; padding: 16px 18px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--surface-2); font-size: 0.9rem; color: var(--ink-soft);
+  }
+  .gate-card b { color: var(--ink); }
+
+  section { padding: 36px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .section-num { font-family: "Oswald", sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--line); min-width: 2.2ch; }
+  h2 { font-size: 1.4rem; margin: 0; }
+  h3 { font-size: 1.05rem; margin: 22px 0 10px; }
+  p { margin: 0 0 12px; }
+  ul.plain { margin: 0 0 12px; padding-left: 1.2em; }
+  ul.plain li { margin-bottom: 6px; }
+
+  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 680px) { .phases { grid-template-columns: 1fr; } }
+  .phase-card { border-left: 4px solid var(--line); background: var(--surface); border-radius: 4px; padding: 16px 18px; }
+  .phase-card.p1 { border-left-color: var(--phase1); } .phase-card.p2 { border-left-color: var(--phase2); } .phase-card.p3 { border-left-color: var(--phase3); }
+  .phase-card .wk { font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 4px; }
+  .phase-card h3 { margin: 0 0 8px; font-size: 1.02rem; }
+  .phase-card p { font-size: 0.9rem; color: var(--ink-soft); margin: 0; }
+
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  @media (max-width: 680px) { .week-grid { grid-template-columns: repeat(2, 1fr); } }
+  .week-cell { border: 1px solid var(--line); border-radius: 6px; padding: 12px 10px; background: var(--surface); text-align: center; }
+  .week-cell.rest { background: var(--rest-bg); }
+  .week-cell .dow { font-family: "Oswald", sans-serif; font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .week-cell .what { font-size: 0.85rem; font-weight: 500; }
+  .week-cell .what.restlabel { color: var(--ink-soft); font-weight: 400; }
+
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 8px 0 16px; }
+  table.ex { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 0.9rem; background: var(--surface); }
+  table.ex th, table.ex td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  table.ex th { font-family: "Oswald", sans-serif; font-weight: 600; font-size: 0.76rem; color: var(--ink-soft); background: var(--surface-2); white-space: nowrap; }
+  table.ex td.exname { font-weight: 500; }
+  table.ex td .reps { color: var(--ink-soft); opacity: 0.45; transition: opacity .15s, color .15s, font-weight .15s; }
+  table.ex td .reps.active { opacity: 1; font-weight: 600; }
+  table.ex td .reps.active.p1 { color: var(--phase1); }
+  table.ex td .reps.active.p2 { color: var(--phase2); }
+  table.ex td .reps.active.p3 { color: var(--phase3); }
+
+  .day-block { margin-bottom: 14px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .day-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .day-head-left { display: flex; align-items: center; gap: 10px; }
+  .day-tag { font-family: "Oswald", sans-serif; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 100px; background: var(--surface-2); color: var(--ink-soft); white-space: nowrap; }
+  .day-head h3 { margin: 0; font-size: 1rem; }
+  .day-body { padding: 0 16px 18px; display: none; }
+  .day-body.open { display: block; }
+  .chevron { font-size: 0.8rem; color: var(--ink-soft); transition: transform .15s; }
+  .chevron.open { transform: rotate(180deg); }
+  .block-label { font-family: "Oswald", sans-serif; font-size: 0.78rem; font-weight: 600; color: var(--cobalt-ink); margin: 16px 0 6px; }
+
+  .complete-btn {
+    font-family: "Oswald", sans-serif; font-weight: 600; font-size: 0.85rem;
+    border: 1px solid var(--ok); color: var(--ok); background: transparent;
+    padding: 9px 16px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 14px;
+  }
+  .complete-btn[data-done="true"] { background: var(--ok-soft); }
+  .complete-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .callout { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 6px; padding: 16px 18px; margin: 10px 0; }
+  .callout h3 { margin-top: 0; color: var(--ink); }
+  .callout ul.plain { margin-bottom: 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 4px 0 18px; font-size: 0.84rem; color: var(--ink-soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dot.p1 { background: var(--phase1); } .dot.p2 { background: var(--phase2); } .dot.p3 { background: var(--phase3); }
+
+  .equip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 24px; }
+  @media (max-width: 560px) { .equip-grid { grid-template-columns: 1fr; } }
+  .equip-grid div { padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 0.9rem; }
+
+  .vj-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 560px) { .vj-grid { grid-template-columns: repeat(2, 1fr); } }
+  .vj-cell { border: 1px solid var(--line); border-radius: 6px; padding: 10px; background: var(--surface); text-align: center; }
+  .vj-cell label { display: block; font-family: "Oswald", sans-serif; font-size: 0.75rem; color: var(--ink-soft); margin-bottom: 6px; }
+  .vj-cell input {
+    width: 100%; text-align: center; font-size: 1.1rem; font-family: "Oswald", sans-serif;
+    border: 1px solid var(--line); border-radius: 4px; padding: 6px; background: var(--bg); color: var(--ink);
+  }
+  .vj-cell input:disabled { opacity: 0.4; }
+  .vj-delta { margin-top: 10px; font-size: 0.88rem; color: var(--ink-soft); }
+  .vj-delta b { color: var(--ok); }
+
+  footer { padding: 28px 0 10px; color: var(--ink-soft); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Gym-based strength &amp; power program</p>
+    <h1>Middle Blocker Development Program</h1>
+    <p class="sub">A 12-week plan built around Planet Fitness equipment and your Mon/Wed club practice schedule. Sign in to check off days and log your vertical jump — it syncs across any device.</p>
+    <div class="chips">
+      <div class="chip"><b>12 weeks</b> · 3 phases</div>
+      <div class="chip"><b>4 gym days</b> / week</div>
+      <div class="chip"><b>60–90 min</b> per session</div>
+      <div class="chip">Planet Fitness equipment only</div>
+    </div>
+  </div>
+</div>
+
+<div class="tracker-bar">
+  <div class="tracker-inner">
+    <div class="tracker-row">
+      <div class="tracker-stats">
+        <div class="stat"><b id="statWeek">– / 4</b>this week</div>
+        <div class="stat"><b id="statTotal">–</b>total sessions</div>
+      </div>
+      <div class="phase-picker" id="phasePicker">
+        <button class="phase-btn" data-phase="1" disabled>Phase 1</button>
+        <button class="phase-btn" data-phase="2" disabled>Phase 2</button>
+        <button class="phase-btn" data-phase="3" disabled>Phase 3</button>
+      </div>
+      <div class="auth-row" id="authRow">
+        <button class="auth-btn google" id="signInBtn">Sign in with Google</button>
+      </div>
+    </div>
+    <div class="gate-card" id="gateCard" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section>
+  <div class="section-head"><span class="section-num">01</span><h2>Why this program</h2></div>
+  <p>A middle blocker's job comes down to a handful of physical demands: a fast, repeatable vertical jump; quick lateral footwork to close blocks; a powerful arm swing; and the ability to do all of that over and over across a long match without your legs or shoulders breaking down. Since you're coming back from a lower training base, this plan is built in three stages so your body adapts in the right order — build a strength and landing-mechanics foundation first, then layer in real jump power, then peak toward match-specific explosiveness.</p>
+  <p>This plan runs <i>alongside</i> your volleyball schedule — Monday and Wednesday club practice are built in as your rest days from the gym.</p>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">02</span><h2>How the 12 weeks are structured</h2></div>
+  <div class="phases">
+    <div class="phase-card p1"><div class="wk">Weeks 1–4</div><h3>Phase 1 — Foundation</h3><p>General strength, movement quality, and landing mechanics. Jump training stays low-impact: sticking landings, not maximal jumps.</p></div>
+    <div class="phase-card p2"><div class="wk">Weeks 5–8</div><h3>Phase 2 — Build</h3><p>Strength loads increase. Plyometrics progress to moderate-intensity jumps with full recovery between reps.</p></div>
+    <div class="phase-card p3"><div class="wk">Weeks 9–12</div><h3>Phase 3 — Power</h3><p>Heavier strength work paired with reactive, match-specific power: depth jumps, single-leg power, and blocking-footwork drills.</p></div>
+  </div>
+  <p style="margin-top:14px;">Sign in, then tap <b>Phase 1 / 2 / 3</b> at the top to highlight the right sets &amp; reps for where you are right now.</p>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">03</span><h2>Your weekly schedule</h2></div>
+  <div class="week-grid">
+    <div class="week-cell rest"><div class="dow">Mon</div><div class="what restlabel">Club practice</div></div>
+    <div class="week-cell"><div class="dow">Tue</div><div class="what">Gym — Day 1</div></div>
+    <div class="week-cell rest"><div class="dow">Wed</div><div class="what restlabel">Club practice</div></div>
+    <div class="week-cell"><div class="dow">Thu</div><div class="what">Gym — Day 2</div></div>
+    <div class="week-cell"><div class="dow">Fri</div><div class="what">Gym — Day 3</div></div>
+    <div class="week-cell"><div class="dow">Sat</div><div class="what">Gym — Day 4</div></div>
+    <div class="week-cell rest"><div class="dow">Sun</div><div class="what restlabel">Full rest</div></div>
+  </div>
+  <p style="margin-top:14px;">This spacing keeps the two leg-heavy days (1 and 3) from ever landing back-to-back, and gives a full rest day on Sunday on top of the two club-practice recovery days.</p>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">04</span><h2>Warm-up — do this before every session</h2></div>
+  <p>5–8 minutes, every single day, no exceptions.</p>
+  <ul class="plain">
+    <li>3–4 min easy cardio (bike, rower, or brisk treadmill walk)</li>
+    <li>Leg swings — front/back and side/side, 10 each leg</li>
+    <li>Bodyweight squats × 10, walking lunges × 8 each leg</li>
+    <li>Ankle pogo hops × 20 (small, quick, quiet bounces)</li>
+    <li>Arm circles + band or cable face pulls × 15</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">05</span><h2>The four training days</h2></div>
+  <div class="legend">
+    <span><span class="dot p1"></span>Phase 1 (wk 1–4)</span>
+    <span><span class="dot p2"></span>Phase 2 (wk 5–8)</span>
+    <span><span class="dot p3"></span>Phase 3 (wk 9–12)</span>
+  </div>
+
+  <div class="day-block" data-day="day1">
+    <div class="day-head" data-toggle="day1">
+      <div class="day-head-left"><span class="day-tag">Day 1 · Tue</span><h3>Lower body strength + landing mechanics</h3></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="day-body" id="body-day1">
+      <div class="block-label">Main strength</div>
+      <div class="table-scroll">
+      <table class="ex"><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr>
+        <tr><td class="exname">Smith machine squat (or leg press)</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×5</span></td><td>90s</td></tr>
+        <tr><td class="exname">Dumbbell Romanian deadlift</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Walking dumbbell lunge</td><td><span class="reps" data-phase="1">3×10/leg</span><span class="reps" data-phase="2">3×10/leg</span><span class="reps" data-phase="3">3×8/leg (heavier)</span></td><td>60s</td></tr>
+        <tr><td class="exname">Seated leg curl machine</td><td><span class="reps" data-phase="1">3×12</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">3×10</span></td><td>60s</td></tr>
+        <tr><td class="exname">Standing calf raise machine</td><td><span class="reps" data-phase="1">3×15</span><span class="reps" data-phase="2">3×15</span><span class="reps" data-phase="3">4×12</span></td><td>45s</td></tr>
+      </table></div>
+      <div class="block-label">Power / landing mechanics</div>
+      <div class="table-scroll">
+      <table class="ex"><tr><th>Drill</th><th>Sets × reps</th></tr>
+        <tr><td class="exname">Box step-off, stick the landing</td><td><span class="reps" data-phase="1">3×5</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Broad jump, stick the landing</td><td><span class="reps" data-phase="1">3×5</span><span class="reps" data-phase="2">3×5</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Box jump (moderate height, step down)</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">4×4</span><span class="reps" data-phase="3">4×4</span></td></tr>
+        <tr><td class="exname">Depth jump (low box, immediate rebound)</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">4×4</span></td></tr>
+        <tr><td class="exname">Lateral bound, stick the landing</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">3×4/side</span><span class="reps" data-phase="3">4×4/side</span></td></tr>
+      </table></div>
+      <div class="block-label">Core</div>
+      <p>Plank × 3 rounds (30–45s) · Cable pallof press × 3×10/side</p>
+      <button class="complete-btn" data-day="day1" disabled><span class="check">✓</span>Mark Day 1 complete</button>
+    </div>
+  </div>
+
+  <div class="day-block" data-day="day2">
+    <div class="day-head" data-toggle="day2">
+      <div class="day-head-left"><span class="day-tag">Day 2 · Thu</span><h3>Upper body push/pull + shoulder health</h3></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="day-body" id="body-day2">
+      <div class="block-label">Main strength</div>
+      <div class="table-scroll">
+      <table class="ex"><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr>
+        <tr><td class="exname">Dumbbell flat or incline bench press</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Lat pulldown</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Seated cable row</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">4×8</span></td><td>60s</td></tr>
+        <tr><td class="exname">Dumbbell shoulder press</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">3×8</span></td><td>60s</td></tr>
+        <tr><td class="exname">Assisted pull-up machine</td><td><span class="reps" data-phase="1">3×6</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">4×6</span></td><td>60s</td></tr>
+      </table></div>
+      <div class="block-label">Shoulder durability</div>
+      <p>Cable external rotation × 3×12/side · Cable or band face pull × 3×15 · Scapular push-up × 2×10</p>
+      <div class="block-label">Core</div>
+      <p>Cable woodchopper × 3×10/side · Hanging or lying knee raise × 3×12</p>
+      <button class="complete-btn" data-day="day2" disabled><span class="check">✓</span>Mark Day 2 complete</button>
+    </div>
+  </div>
+
+  <div class="day-block" data-day="day3">
+    <div class="day-head" data-toggle="day3">
+      <div class="day-head-left"><span class="day-tag">Day 3 · Fri</span><h3>Explosive power + conditioning</h3></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="day-body" id="body-day3">
+      <div class="block-label">Power</div>
+      <div class="table-scroll">
+      <table class="ex"><tr><th>Drill</th><th>Sets × reps</th></tr>
+        <tr><td class="exname">Vertical jump, stick the landing</td><td><span class="reps" data-phase="1">4×5</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Line hop, side to side (low, quiet)</td><td><span class="reps" data-phase="1">3×20s</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Squat jump, full reset between reps</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">4×5</span><span class="reps" data-phase="3">4×5</span></td></tr>
+        <tr><td class="exname">Tuck jump</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">3×5</span><span class="reps" data-phase="3">3×6</span></td></tr>
+        <tr><td class="exname">Reactive block jump (2-ft jump + reach)</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">4×5</span></td></tr>
+        <tr><td class="exname">Single-leg hop for distance</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">3×4/leg</span></td></tr>
+      </table></div>
+      <div class="block-label">Conditioning</div>
+      <p>Bike, rower, or treadmill: 30s hard / 90s easy, × 6–8 rounds. Add one round every two weeks as it gets easier.</p>
+      <div class="block-label">Core</div>
+      <p>Side plank × 3×30s/side · Dead bug × 3×10/side</p>
+      <button class="complete-btn" data-day="day3" disabled><span class="check">✓</span>Mark Day 3 complete</button>
+    </div>
+  </div>
+
+  <div class="day-block" data-day="day4">
+    <div class="day-head" data-toggle="day4">
+      <div class="day-head-left"><span class="day-tag">Day 4 · Sat</span><h3>Full body strength + mobility</h3></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="day-body" id="body-day4">
+      <div class="block-label">Main strength</div>
+      <div class="table-scroll">
+      <table class="ex"><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr>
+        <tr><td class="exname">Smith machine deadlift or hip thrust</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Single-leg press or Bulgarian split squat</td><td><span class="reps" data-phase="1">3×10/leg</span><span class="reps" data-phase="2">3×8/leg</span><span class="reps" data-phase="3">3×6/leg</span></td><td>75s</td></tr>
+        <tr><td class="exname">Incline chest press machine</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">4×8</span></td><td>60s</td></tr>
+        <tr><td class="exname">Single-arm dumbbell row</td><td><span class="reps" data-phase="1">3×10/side</span><span class="reps" data-phase="2">3×10/side</span><span class="reps" data-phase="3">4×8/side</span></td><td>60s</td></tr>
+      </table></div>
+      <div class="block-label">Mobility focus</div>
+      <p>90/90 hip stretch × 60s/side · Ankle dorsiflexion rock × 10/side · Thoracic spine rotation × 10/side</p>
+      <button class="complete-btn" data-day="day4" disabled><span class="check">✓</span>Mark Day 4 complete</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">06</span><h2>Cooldown — every session</h2></div>
+  <p>5–10 minutes. Hamstring, hip flexor, chest/shoulder, and quad stretches, each held 30–45 seconds per side. Foam roll quads, calves, and upper back if available.</p>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">07</span><h2>Plyometric safety rules</h2></div>
+  <div class="callout">
+    <h3>Read this before Day 1</h3>
+    <ul class="plain">
+      <li>Landings should be quiet. A loud slap or thud means you're not absorbing through your hips and knees — slow down and reset.</li>
+      <li>Full recovery between jump sets in Phases 2–3 — this is about quality, not fatigue.</li>
+      <li>Sharp joint pain, swelling, or pain that changes how you walk is a stop sign — get it looked at before continuing.</li>
+      <li>If you haven't had a sports physical recently, get one before starting, especially coming back from lower conditioning.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">08</span><h2>Planet Fitness equipment used</h2></div>
+  <div class="equip-grid">
+    <div>Dumbbells (full rack)</div><div>Smith machine</div><div>Leg press</div>
+    <div>Seated leg curl machine</div><div>Calf raise machine</div><div>Lat pulldown</div>
+    <div>Seated cable row</div><div>Cable column</div><div>Assisted pull-up/dip machine</div>
+    <div>Incline chest press machine</div><div>Bike, rower, or treadmill</div><div>Open turf / stretching area</div>
+  </div>
+  <p style="margin-top:14px;">Most Planet Fitness locations don't carry a barbell/squat rack or bumper plates — that's why the heavier lower-body lifts use the Smith machine or dumbbells instead.</p>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">09</span><h2>Vertical jump tracker</h2></div>
+  <p>Every 4 weeks, test your standing vertical jump (reach-and-mark on a wall, then jump-and-mark — the gap is your vertical, in inches). Enter it below — it saves to your account automatically.</p>
+  <div class="vj-grid">
+    <div class="vj-cell"><label>Week 1</label><input type="number" inputmode="decimal" id="vj1" placeholder="in" disabled></div>
+    <div class="vj-cell"><label>Week 4</label><input type="number" inputmode="decimal" id="vj4" placeholder="in" disabled></div>
+    <div class="vj-cell"><label>Week 8</label><input type="number" inputmode="decimal" id="vj8" placeholder="in" disabled></div>
+    <div class="vj-cell"><label>Week 12</label><input type="number" inputmode="decimal" id="vj12" placeholder="in" disabled></div>
+  </div>
+  <p class="vj-delta" id="vjDelta"></p>
+</section>
+
+<footer>
+  Built for Sean — pair this with consistent sleep (8–10 hrs for a developing athlete) and regular meals with enough protein to support recovery. If anything here conflicts with guidance from a team athletic trainer, physical therapist, or doctor, defer to them.
+</footer>
+
+</div>
+
+<script>
+(function(){
+
+  // =====================================================================
+  // 1) PASTE YOUR FIREBASE CONFIG HERE (from Firebase console ->
+  //    Project Settings -> Your apps -> Web app). Replace every value.
+  // =====================================================================
+  var firebaseConfig = {
+    apiKey: "AIzaSyDMLB_9mw3Pbz3afvW89o4hiwAsTc2-lTE",
+    authDomain: "sean-mb-dev-program.firebaseapp.com",
+    projectId: "sean-mb-dev-program",
+    storageBucket: "sean-mb-dev-program.firebasestorage.app",
+    messagingSenderId: "371232304001",
+    appId: "1:371232304001:web:45a98b273253b929b4d680"
+  };
+
+  // =====================================================================
+  // 2) Only this email is allowed to sign in and track progress.
+  // =====================================================================
+  var ALLOWED_EMAIL = "onlyseanjohn@gmail.com";
+
+  firebase.initializeApp(firebaseConfig);
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+  var provider = new firebase.auth.GoogleAuthProvider();
+
+  var state = { completions: {}, phase: "1", vj: {} };
+  var currentUser = null;
+  var unsubscribeDoc = null;
+
+  function isoWeekKey(d){
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return d.getUTCFullYear() + '-W' + String(weekNo).padStart(2,'0');
+  }
+  var currentWeek = isoWeekKey(new Date());
+  function completionKey(day){ return currentWeek + '-' + day; }
+  function labelFor(day){ return { day1:'Day 1', day2:'Day 2', day3:'Day 3', day4:'Day 4' }[day] || day; }
+
+  // ---- UI enable/disable ----
+  function setInteractive(enabled){
+    document.querySelectorAll('.phase-btn').forEach(function(b){ b.disabled = !enabled; });
+    document.querySelectorAll('.complete-btn').forEach(function(b){ b.disabled = !enabled; });
+    document.querySelectorAll('.vj-cell input').forEach(function(i){ i.disabled = !enabled; });
+  }
+
+  function applyPhase(){
+    document.querySelectorAll('.phase-btn').forEach(function(btn){
+      btn.setAttribute('data-active', btn.getAttribute('data-phase') === state.phase ? 'true' : 'false');
+    });
+    document.querySelectorAll('.reps').forEach(function(el){
+      var isActive = el.getAttribute('data-phase') === state.phase;
+      el.classList.toggle('active', isActive);
+      el.classList.remove('p1','p2','p3');
+      if (isActive) el.classList.add('p' + state.phase);
+    });
+  }
+
+  function refreshButtons(){
+    document.querySelectorAll('.complete-btn').forEach(function(btn){
+      var day = btn.getAttribute('data-day');
+      var done = !!state.completions[completionKey(day)];
+      btn.setAttribute('data-done', done ? 'true' : 'false');
+      btn.innerHTML = done ? '<span class="check">✓</span>Completed — tap to undo' : '<span class="check">✓</span>Mark ' + labelFor(day) + ' complete';
+    });
+  }
+
+  function updateStats(){
+    var days = ['day1','day2','day3','day4'];
+    var doneThisWeek = 0;
+    days.forEach(function(d){ if (state.completions[completionKey(d)]) doneThisWeek++; });
+    document.getElementById('statWeek').textContent = doneThisWeek + ' / 4';
+    var total = 0;
+    Object.keys(state.completions).forEach(function(k){ if (state.completions[k]) total++; });
+    document.getElementById('statTotal').textContent = total;
+  }
+
+  function updateVjInputs(){
+    ['vj1','vj4','vj8','vj12'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el && state.vj[id] !== undefined) el.value = state.vj[id];
+    });
+    updateVjDelta();
+  }
+  function updateVjDelta(){
+    var base = parseFloat(state.vj.vj1);
+    var latestKey = ['vj12','vj8','vj4'].find(function(k){ return state.vj[k] !== undefined && state.vj[k] !== ''; });
+    var el = document.getElementById('vjDelta');
+    if (!el) return;
+    if (isNaN(base) || !latestKey) { el.textContent = ''; return; }
+    var latest = parseFloat(state.vj[latestKey]);
+    if (isNaN(latest)) { el.textContent = ''; return; }
+    var delta = latest - base;
+    var sign = delta >= 0 ? '+' : '';
+    el.innerHTML = 'Change from Week 1 baseline: <b>' + sign + delta.toFixed(1) + '"</b>';
+  }
+
+  function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); }
+
+  // ---- Firestore save (debounced-ish via direct set with merge) ----
+  function saveState(){
+    if (!currentUser) return;
+    db.collection('trackerData').doc(currentUser.uid).set(state, { merge: false })
+      .catch(function(err){ console.error('Save failed', err); });
+  }
+
+  // ---- Day accordions (always available, even signed out) ----
+  document.querySelectorAll('[data-toggle]').forEach(function(head){
+    head.addEventListener('click', function(){
+      var key = head.getAttribute('data-toggle');
+      var body = document.getElementById('body-' + key);
+      var chevron = head.querySelector('.chevron');
+      var isOpen = body.classList.toggle('open');
+      chevron.classList.toggle('open', isOpen);
+    });
+  });
+  (function(){
+    var firstBody = document.getElementById('body-day1');
+    var firstHead = document.querySelector('[data-toggle="day1"] .chevron');
+    if (firstBody) firstBody.classList.add('open');
+    if (firstHead) firstHead.classList.add('open');
+  })();
+
+  // ---- Phase buttons ----
+  document.querySelectorAll('.phase-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if (btn.disabled) return;
+      state.phase = btn.getAttribute('data-phase');
+      applyPhase();
+      saveState();
+    });
+  });
+
+  // ---- Complete buttons ----
+  document.querySelectorAll('.complete-btn').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (btn.disabled) return;
+      var day = btn.getAttribute('data-day');
+      var key = completionKey(day);
+      state.completions[key] = !state.completions[key];
+      refreshButtons();
+      updateStats();
+      saveState();
+    });
+  });
+
+  // ---- Vertical jump inputs ----
+  ['vj1','vj4','vj8','vj12'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', function(){
+      if (el.disabled) return;
+      state.vj[id] = el.value;
+      updateVjDelta();
+      saveState();
+    });
+  });
+
+  // ---- Auth ----
+  var authRow = document.getElementById('authRow');
+  var gateCard = document.getElementById('gateCard');
+  var signInBtn = document.getElementById('signInBtn');
+
+  signInBtn.addEventListener('click', function(){
+    auth.signInWithPopup(provider).catch(function(err){
+      console.error(err);
+      alert('Sign-in failed: ' + err.message);
+    });
+  });
+
+  function showSignedOut(){
+    setInteractive(false);
+    authRow.innerHTML = '<button class="auth-btn google" id="signInBtn">Sign in with Google</button>';
+    document.getElementById('signInBtn').addEventListener('click', function(){
+      auth.signInWithPopup(provider).catch(function(err){ alert('Sign-in failed: ' + err.message); });
+    });
+    gateCard.style.display = 'block';
+    gateCard.innerHTML = '<b>Sign in to track your progress.</b> You can still read the full program below without signing in.';
+    document.getElementById('statWeek').textContent = '– / 4';
+    document.getElementById('statTotal').textContent = '–';
+  }
+
+  function showWrongAccount(email){
+    setInteractive(false);
+    gateCard.style.display = 'block';
+    gateCard.innerHTML = '<b>This tracker is set up for ' + ALLOWED_EMAIL + ' only.</b> You signed in as ' + email + '. Signing out...';
+    setTimeout(function(){ auth.signOut(); }, 1800);
+  }
+
+  function showSignedIn(user){
+    setInteractive(true);
+    authRow.innerHTML = '<span>Signed in as ' + user.email + '</span><button class="auth-btn" id="signOutBtn">Sign out</button>';
+    document.getElementById('signOutBtn').addEventListener('click', function(){ auth.signOut(); });
+    gateCard.style.display = 'none';
+  }
+
+  auth.onAuthStateChanged(function(user){
+    if (unsubscribeDoc) { unsubscribeDoc(); unsubscribeDoc = null; }
+
+    if (!user) {
+      currentUser = null;
+      state = { completions: {}, phase: "1", vj: {} };
+      render();
+      showSignedOut();
+      return;
+    }
+
+    if (user.email !== ALLOWED_EMAIL) {
+      currentUser = null;
+      showWrongAccount(user.email);
+      return;
+    }
+
+    currentUser = user;
+    showSignedIn(user);
+
+    var docRef = db.collection('trackerData').doc(user.uid);
+    unsubscribeDoc = docRef.onSnapshot(function(snap){
+      if (snap.exists) {
+        var data = snap.data();
+        state = {
+          completions: data.completions || {},
+          phase: data.phase || "1",
+          vj: data.vj || {}
+        };
+      } else {
+        state = { completions: {}, phase: "1", vj: {} };
+        docRef.set(state);
+      }
+      render();
+    }, function(err){
+      console.error('Listen failed', err);
+      gateCard.style.display = 'block';
+      gateCard.innerHTML = '<b>Could not load your saved data.</b> Check your Firestore security rules and config values.';
+    });
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
