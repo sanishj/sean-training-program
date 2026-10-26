@@ -443,9 +443,14 @@
   };
 
   // =====================================================================
-  // 2) Only this email is allowed to sign in and track progress.
+  // 2) Sean's account can sign in AND edit (check off days, change phase,
+  //    log jump numbers). Anyone listed in VIEWER_EMAILS can sign in and
+  //    see live progress, but cannot change anything \u2014 enforced here
+  //    AND in the Firestore security rule.
   // =====================================================================
-  var ALLOWED_EMAIL = "onlyseanjohn@gmail.com";
+  var OWNER_EMAIL = "onlyseanjohn@gmail.com";
+  var VIEWER_EMAILS = ["sanishj@gmail.com"];
+  var SHARED_DOC_ID = "sean"; // one shared record both of you read from
 
   firebase.initializeApp(firebaseConfig);
   var auth = firebase.auth();
@@ -528,10 +533,11 @@
 
   function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); }
 
-  // ---- Firestore save (debounced-ish via direct set with merge) ----
+  // ---- Firestore save (owner only \u2014 viewers never call this because
+  // their controls are disabled, but this guard is a backstop) ----
   function saveState(){
-    if (!currentUser) return;
-    db.collection('trackerData').doc(currentUser.uid).set(state, { merge: false })
+    if (!currentUser || currentRole !== 'owner') return;
+    db.collection('trackerData').doc(SHARED_DOC_ID).set(state, { merge: false })
       .catch(function(err){ console.error('Save failed', err); });
   }
 
@@ -592,6 +598,7 @@
   var authRow = document.getElementById('authRow');
   var gateCard = document.getElementById('gateCard');
   var signInBtn = document.getElementById('signInBtn');
+  var currentRole = null; // 'owner' or 'viewer'
 
   signInBtn.addEventListener('click', function(){
     auth.signInWithPopup(provider).catch(function(err){
@@ -614,16 +621,24 @@
 
   function showWrongAccount(email){
     setInteractive(false);
+    authRow.innerHTML = '<span>Not authorized: ' + email + '</span><button class="auth-btn" id="wrongAccountSignOut">Sign out</button>';
+    document.getElementById('wrongAccountSignOut').addEventListener('click', function(){ auth.signOut(); });
     gateCard.style.display = 'block';
-    gateCard.innerHTML = '<b>This tracker is set up for ' + ALLOWED_EMAIL + ' only.</b> You signed in as ' + email + '. Signing out...';
-    setTimeout(function(){ auth.signOut(); }, 1800);
+    gateCard.innerHTML = '<b>This tracker isn\'t set up for ' + email + '.</b> Click "Sign out" above, then sign in with an approved account instead.';
   }
 
-  function showSignedIn(user){
-    setInteractive(true);
-    authRow.innerHTML = '<span>Signed in as ' + user.email + '</span><button class="auth-btn" id="signOutBtn">Sign out</button>';
+  function showSignedIn(user, role){
+    currentRole = role;
+    setInteractive(role === 'owner');
+    var label = role === 'owner' ? 'Signed in as ' + user.email : 'Viewing (read-only) as ' + user.email;
+    authRow.innerHTML = '<span>' + label + '</span><button class="auth-btn" id="signOutBtn">Sign out</button>';
     document.getElementById('signOutBtn').addEventListener('click', function(){ auth.signOut(); });
-    gateCard.style.display = 'none';
+    if (role === 'viewer') {
+      gateCard.style.display = 'block';
+      gateCard.innerHTML = '<b>Read-only view.</b> Only Sean\'s account can check off days or edit entries here \u2014 you\'re seeing his live progress.';
+    } else {
+      gateCard.style.display = 'none';
+    }
   }
 
   auth.onAuthStateChanged(function(user){
@@ -631,22 +646,28 @@
 
     if (!user) {
       currentUser = null;
+      currentRole = null;
       state = { completions: {}, phase: "1", vj: {} };
       render();
       showSignedOut();
       return;
     }
 
-    if (user.email !== ALLOWED_EMAIL) {
+    var role = null;
+    if (user.email === OWNER_EMAIL) role = 'owner';
+    else if (VIEWER_EMAILS.indexOf(user.email) !== -1) role = 'viewer';
+
+    if (!role) {
       currentUser = null;
+      currentRole = null;
       showWrongAccount(user.email);
       return;
     }
 
     currentUser = user;
-    showSignedIn(user);
+    showSignedIn(user, role);
 
-    var docRef = db.collection('trackerData').doc(user.uid);
+    var docRef = db.collection('trackerData').doc(SHARED_DOC_ID);
     unsubscribeDoc = docRef.onSnapshot(function(snap){
       if (snap.exists) {
         var data = snap.data();
@@ -655,15 +676,17 @@
           phase: data.phase || "1",
           vj: data.vj || {}
         };
-      } else {
+      } else if (role === 'owner') {
         state = { completions: {}, phase: "1", vj: {} };
         docRef.set(state);
+      } else {
+        state = { completions: {}, phase: "1", vj: {} };
       }
       render();
     }, function(err){
       console.error('Listen failed', err);
       gateCard.style.display = 'block';
-      gateCard.innerHTML = '<b>Could not load your saved data.</b> Check your Firestore security rules and config values.';
+      gateCard.innerHTML = '<b>Could not load the saved data.</b> Check your Firestore security rules and config values.';
     });
   });
 
