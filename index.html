@@ -156,7 +156,28 @@
   .log-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
   .log-row .log-day { font-weight: 600; }
   .log-row .log-when { color: var(--ink-soft); }
-  table.ex td .reps { color: var(--ink-soft); opacity: 0.45; transition: opacity .15s, color .15s, font-weight .15s; }
+
+  .cal-card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-nav-btn { font-family: "Oswald", sans-serif; font-size: 1.1rem; font-weight: 600; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); width: 34px; height: 34px; border-radius: 6px; cursor: pointer; }
+  .cal-month-label { font-family: "Oswald", sans-serif; font-weight: 600; font-size: 1rem; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-dow { text-align: center; font-family: "Oswald", sans-serif; font-size: 0.68rem; color: var(--ink-soft); font-weight: 600; padding-bottom: 4px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--ink); }
+  .cal-cell.cal-blank { visibility: hidden; }
+  .cal-cell.cal-rest, .cal-cell.cal-practice { color: var(--ink-soft); background: var(--rest-bg); }
+  .cal-cell.cal-gym-done { background: var(--ok); color: #fff; font-weight: 700; }
+  .cal-cell.cal-gym-pending { border: 1.5px dashed var(--line); color: var(--ink-soft); }
+  .cal-cell.cal-gym-future { color: var(--ink-soft); }
+  .cal-cell.cal-today { outline: 2px solid var(--cobalt); outline-offset: 1px; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 0.78rem; color: var(--ink-soft); }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .cal-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .cal-swatch.done { background: var(--ok); }
+  .cal-swatch.pending { border: 1.5px dashed var(--line); }
+  .cal-swatch.practice { background: var(--rest-bg); border: 1px solid var(--line); }
+  table.ex td .reps { color: var(--ink-soft); opacity: 0.45; transition: opacity .15s, color .15s, font-weight .15s; margin-right: 8px; display: inline-block; }
+  table.ex td .reps:last-child { margin-right: 0; }
   table.ex td .reps.active { opacity: 1; font-weight: 600; }
   table.ex td .reps.active.p1 { color: var(--phase1); }
   table.ex td .reps.active.p2 { color: var(--phase2); }
@@ -437,7 +458,25 @@
 </section>
 
 <section>
-  <div class="section-head"><span class="section-num">10</span><h2>Activity log</h2></div>
+  <div class="section-head"><span class="section-num">10</span><h2>Calendar view</h2></div>
+  <p>A month at a glance for spotting patterns — filled green means that gym day got done.</p>
+  <div class="cal-card">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="calPrev" type="button">‹</button>
+      <div class="cal-month-label" id="calMonthLabel"></div>
+      <button class="cal-nav-btn" id="calNext" type="button">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <span><span class="cal-swatch done"></span>Completed</span>
+      <span><span class="cal-swatch pending"></span>Gym day, not done</span>
+      <span><span class="cal-swatch practice"></span>Practice / rest</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-head"><span class="section-num">11</span><h2>Activity log</h2></div>
   <p>Every time a day gets marked complete, it shows up here with a date and time — the clearest way to confirm something actually saved, especially on spotty gym wifi.</p>
   <div id="activityLog"></div>
 </section>
@@ -599,7 +638,59 @@
     el.innerHTML = 'Change from Week 1 baseline: <b>' + sign + delta.toFixed(1) + '"</b>';
   }
 
-  function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); renderActivityLog(); }
+  // ---- Calendar ----
+  var calMonthOffset = 0;
+  var DOW_TO_DAY = { 2: 'day1', 4: 'day2', 5: 'day3', 6: 'day4' }; // Tue/Thu/Fri/Sat
+
+  function renderCalendar(){
+    var grid = document.getElementById('calGrid');
+    var label = document.getElementById('calMonthLabel');
+    if (!grid || !label) return;
+
+    var base = new Date();
+    var viewDate = new Date(base.getFullYear(), base.getMonth() + calMonthOffset, 1);
+    var year = viewDate.getFullYear();
+    var month = viewDate.getMonth();
+    label.textContent = viewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+    var firstDow = new Date(year, month, 1).getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var today = new Date(); today.setHours(0,0,0,0);
+
+    var html = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){
+      return '<div class="cal-dow">' + d + '</div>';
+    }).join('');
+
+    for (var i = 0; i < firstDow; i++) html += '<div class="cal-cell cal-blank"></div>';
+
+    for (var day = 1; day <= daysInMonth; day++) {
+      var d = new Date(year, month, day);
+      var dow = d.getDay();
+      var isToday = d.getTime() === today.getTime();
+      var cls = 'cal-cell';
+      var content = String(day);
+
+      if (dow === 0 || dow === 1 || dow === 3) {
+        cls += dow === 0 ? ' cal-rest' : ' cal-practice';
+      } else if (DOW_TO_DAY[dow]) {
+        var rec = state.completions[isoWeekKey(d) + '-' + DOW_TO_DAY[dow]];
+        if (isDone(rec)) { cls += ' cal-gym-done'; content = '✓'; }
+        else if (d.getTime() > today.getTime()) { cls += ' cal-gym-future'; }
+        else { cls += ' cal-gym-pending'; }
+      }
+      if (isToday) cls += ' cal-today';
+
+      html += '<div class="' + cls + '" title="' + d.toDateString() + '">' + content + '</div>';
+    }
+    grid.innerHTML = html;
+  }
+
+  var calPrevBtn = document.getElementById('calPrev');
+  var calNextBtn = document.getElementById('calNext');
+  if (calPrevBtn) calPrevBtn.addEventListener('click', function(){ calMonthOffset--; renderCalendar(); });
+  if (calNextBtn) calNextBtn.addEventListener('click', function(){ calMonthOffset++; renderCalendar(); });
+
+  function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); renderActivityLog(); renderCalendar(); }
 
   // ---- Firestore save (owner only — viewers never call this because
   // their controls are disabled, but this guard is a backstop). Returns
