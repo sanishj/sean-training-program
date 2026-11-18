@@ -164,6 +164,7 @@
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
   .cal-dow { text-align: center; font-family: "Oswald", sans-serif; font-size: 0.68rem; color: var(--ink-soft); font-weight: 600; padding-bottom: 4px; }
   .cal-cell { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--ink); }
+  .cal-cell.cal-gym-done { font-size: 1.05rem; }
   .cal-cell.cal-blank { visibility: hidden; }
   .cal-cell.cal-rest, .cal-cell.cal-practice { color: var(--ink-soft); background: var(--rest-bg); }
   .cal-cell.cal-gym-done { background: var(--ok); color: #fff; font-weight: 700; }
@@ -176,6 +177,19 @@
   .cal-swatch.done { background: var(--ok); }
   .cal-swatch.pending { border: 1.5px dashed var(--line); }
   .cal-swatch.practice { background: var(--rest-bg); border: 1px solid var(--line); }
+
+  .phase-suggest {
+    margin-top: 14px; padding: 14px 16px; border: 1px solid var(--cobalt); border-radius: 8px;
+    background: var(--flame-soft); display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; font-size: 0.9rem;
+  }
+  .suggest-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .suggest-btn, .suggest-dismiss {
+    font-family: "Oswald", sans-serif; font-weight: 600; font-size: 0.82rem; border-radius: 6px;
+    padding: 7px 14px; cursor: pointer; white-space: nowrap;
+  }
+  .suggest-btn { background: var(--cobalt); color: #fff; border: 1px solid transparent; }
+  .suggest-dismiss { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
   table.ex td .reps { color: var(--ink-soft); opacity: 0.45; transition: opacity .15s, color .15s, font-weight .15s; margin-right: 8px; display: inline-block; }
   table.ex td .reps:last-child { margin-right: 0; }
   table.ex td .reps.active { opacity: 1; font-weight: 600; }
@@ -251,6 +265,7 @@
     <div class="tracker-row">
       <div class="tracker-stats">
         <div class="stat"><b id="statWeek">– / 4</b>this week</div>
+        <div class="stat"><b id="statNextUp">–</b>next up</div>
         <div class="stat"><b id="statTotal">–</b>total sessions</div>
       </div>
       <div class="phase-picker" id="phasePicker">
@@ -282,6 +297,13 @@
     <div class="phase-card p3"><div class="wk">Weeks 9–12</div><h3>Phase 3 — Power</h3><p>Heavier strength work paired with reactive, match-specific power: depth jumps, single-leg power, and blocking-footwork drills.</p></div>
   </div>
   <p style="margin-top:14px;">Sign in, then tap <b>Phase 1 / 2 / 3</b> at the top to highlight the right sets &amp; reps for where you are right now.</p>
+  <div class="phase-suggest" id="phaseSuggestBanner" style="display:none;">
+    <span class="suggest-text" id="phaseSuggestText"></span>
+    <div class="suggest-actions">
+      <button class="suggest-btn" id="phaseSuggestSwitch" type="button">Switch now</button>
+      <button class="suggest-dismiss" id="phaseSuggestDismiss" type="button" title="Not yet">Not yet</button>
+    </div>
+  </div>
 </section>
 
 <section>
@@ -296,6 +318,7 @@
     <div class="week-cell rest"><div class="dow">Sun</div><div class="what restlabel">Full rest</div></div>
   </div>
   <p style="margin-top:14px;">This spacing keeps the two leg-heavy days (1 and 3) from ever landing back-to-back, and gives a full rest day on Sunday on top of the two club-practice recovery days.</p>
+  <p><b>If a Monday or Wednesday practice gets cancelled</b> and you end up at the gym instead, that's fine — tap whichever Day 1–4 workout you haven't done yet that week. The app tracks by week, not by exact weekday, so it still counts correctly and the Calendar below will show it on the actual day you did it. If you've already finished all four for the week, treat the bonus day as extra mobility/recovery instead of a fifth hard session — more isn't automatically better, especially while rebuilding your base.</p>
 </section>
 
 <section>
@@ -320,7 +343,7 @@
 
   <div class="day-block" data-day="day1">
     <div class="day-head" data-toggle="day1">
-      <div class="day-head-left"><span class="day-tag">Day 1 · Tue</span><h3>Lower body strength + landing mechanics</h3></div>
+      <div class="day-head-left"><span class="day-tag">🦵 Day 1</span><h3>Lower body strength + landing mechanics</h3></div>
       <span class="chevron">▾</span>
     </div>
     <div class="day-body" id="body-day1">
@@ -350,7 +373,7 @@
 
   <div class="day-block" data-day="day2">
     <div class="day-head" data-toggle="day2">
-      <div class="day-head-left"><span class="day-tag">Day 2 · Thu</span><h3>Upper body push/pull + shoulder health</h3></div>
+      <div class="day-head-left"><span class="day-tag">💪 Day 2</span><h3>Upper body push/pull + shoulder health</h3></div>
       <span class="chevron">▾</span>
     </div>
     <div class="day-body" id="body-day2">
@@ -373,7 +396,7 @@
 
   <div class="day-block" data-day="day3">
     <div class="day-head" data-toggle="day3">
-      <div class="day-head-left"><span class="day-tag">Day 3 · Fri</span><h3>Explosive power + conditioning</h3></div>
+      <div class="day-head-left"><span class="day-tag">⚡ Day 3</span><h3>Explosive power + conditioning</h3></div>
       <span class="chevron">▾</span>
     </div>
     <div class="day-body" id="body-day3">
@@ -397,7 +420,7 @@
 
   <div class="day-block" data-day="day4">
     <div class="day-head" data-toggle="day4">
-      <div class="day-head-left"><span class="day-tag">Day 4 · Sat</span><h3>Full body strength + mobility</h3></div>
+      <div class="day-head-left"><span class="day-tag">🔄 Day 4</span><h3>Full body strength + mobility</h3></div>
       <span class="chevron">▾</span>
     </div>
     <div class="day-body" id="body-day4">
@@ -447,7 +470,12 @@
 
 <section>
   <div class="section-head"><span class="section-num">09</span><h2>Vertical jump tracker</h2></div>
-  <p>Every 4 weeks, test your standing vertical jump (reach-and-mark on a wall, then jump-and-mark — the gap is your vertical, in inches). Enter it below — it saves to your account automatically.</p>
+  <p>Every 4 weeks, test your standing vertical jump. Two ways to measure it, since Planet Fitness doesn't have a markable wall:</p>
+  <ul class="plain">
+    <li><b>Phone app (recommended):</b> a free jump-measurement app (My Jump 2, TrueVert, or similar) films the jump and calculates height from flight time — just as accurate as a wall test, and works anywhere there's open floor.</li>
+    <li><b>Tape measure backup:</b> stick a strip of removable painter's tape on any door frame or column, mark standing reach, then jump-and-mark at peak reach. Measure the gap, peel the tape off.</li>
+  </ul>
+  <p>Enter the result below — it saves to your account automatically.</p>
   <div class="vj-grid">
     <div class="vj-cell"><label>Week 1</label><input type="number" inputmode="decimal" id="vj1" placeholder="in" disabled></div>
     <div class="vj-cell"><label>Week 4</label><input type="number" inputmode="decimal" id="vj4" placeholder="in" disabled></div>
@@ -472,6 +500,7 @@
       <span><span class="cal-swatch pending"></span>Gym day, not done</span>
       <span><span class="cal-swatch practice"></span>Practice / rest</span>
     </div>
+    <p style="margin-top:10px;font-size:0.82rem;color:var(--ink-soft);">🦵 Day 1 &nbsp; 💪 Day 2 &nbsp; ⚡ Day 3 &nbsp; 🔄 Day 4 — the icon shown is whichever workout actually got done that day.</p>
   </div>
 </section>
 
@@ -541,6 +570,59 @@
   var currentWeek = isoWeekKey(new Date());
   function completionKey(day){ return currentWeek + '-' + day; }
   function labelFor(day){ return { day1:'Day 1', day2:'Day 2', day3:'Day 3', day4:'Day 4' }[day] || day; }
+  var DAY_ICONS = { day1: '\u{1F9B5}', day2: '\u{1F4AA}', day3: '\u26A1', day4: '\u{1F504}' };
+  function iconFor(day){ return DAY_ICONS[day] || ''; }
+  var DAY_ORDER = ['day1','day2','day3','day4'];
+
+  // Which workout should he do next \u2014 based on the actual last one
+  // completed (by real timestamp), not the calendar week or weekday.
+  function nextUpDay(){
+    var latest = null, latestAt = null;
+    Object.keys(state.completions).forEach(function(key){
+      var rec = state.completions[key];
+      var at = (rec === true) ? approxDateForKey(key) : (rec && rec.at);
+      if (isDone(rec) && at && (!latestAt || new Date(at) > new Date(latestAt))) {
+        latestAt = at;
+        latest = key.split('-').pop();
+      }
+    });
+    if (!latest) return 'day1';
+    var idx = DAY_ORDER.indexOf(latest);
+    return DAY_ORDER[(idx + 1) % DAY_ORDER.length];
+  }
+
+  // ---- Legacy data support: earlier versions stored a completed day as
+  // plain `true` with no timestamp. These helpers recognize that old
+  // format and estimate a date for it, so nothing from before gets lost. ----
+  var DAY_OFFSET_FROM_MONDAY = { day1: 1, day2: 3, day3: 4, day4: 5 }; // Tue/Thu/Fri/Sat
+  function mondayOfIsoWeek(year, week){
+    var jan4 = new Date(Date.UTC(year, 0, 4));
+    var jan4Dow = jan4.getUTCDay() || 7;
+    var monday = new Date(jan4);
+    monday.setUTCDate(jan4.getUTCDate() - jan4Dow + 1 + (week - 1) * 7);
+    return monday;
+  }
+  function approxDateForKey(key){
+    var parts = key.split('-'); // ["2026","W05","day1"]
+    var year = parseInt(parts[0], 10);
+    var week = parseInt(parts[1].slice(1), 10);
+    var offset = DAY_OFFSET_FROM_MONDAY[parts[2]] || 0;
+    var d = mondayOfIsoWeek(year, week);
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString();
+  }
+  function normalizeCompletions(raw){
+    var out = {};
+    Object.keys(raw || {}).forEach(function(key){
+      var rec = raw[key];
+      if (rec === true) {
+        out[key] = { done: true, at: approxDateForKey(key), approx: true };
+      } else if (rec && rec.done) {
+        out[key] = rec;
+      }
+    });
+    return out;
+  }
 
   // ---- UI enable/disable ----
   function setInteractive(enabled){
@@ -561,7 +643,7 @@
     });
   }
 
-  function isDone(rec){ return !!(rec && rec.done); }
+  function isDone(rec){ return rec === true || !!(rec && rec.done); }
 
   function refreshButtons(){
     document.querySelectorAll('.complete-btn').forEach(function(btn){
@@ -581,6 +663,8 @@
     var total = 0;
     Object.keys(state.completions).forEach(function(k){ if (isDone(state.completions[k])) total++; });
     document.getElementById('statTotal').textContent = total;
+    var nu = nextUpDay();
+    document.getElementById('statNextUp').textContent = iconFor(nu) + ' ' + labelFor(nu);
   }
 
   function renderActivityLog(){
@@ -589,9 +673,10 @@
     var entries = [];
     Object.keys(state.completions).forEach(function(key){
       var rec = state.completions[key];
-      if (isDone(rec) && rec.at) {
+      var at = (rec === true) ? approxDateForKey(key) : (rec && rec.at);
+      if (isDone(rec) && at) {
         var day = key.split('-').pop();
-        entries.push({ day: day, at: rec.at });
+        entries.push({ day: day, at: at, approx: (rec === true) || !!(rec && rec.approx) });
       }
     });
     entries.sort(function(a,b){ return new Date(b.at) - new Date(a.at); });
@@ -603,8 +688,8 @@
     el.innerHTML = entries.map(function(e){
       var d = new Date(e.at);
       var dateStr = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-      var timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-      return '<div class="log-row"><span class="log-day">' + labelFor(e.day) + '</span><span class="log-when">' + dateStr + ' · ' + timeStr + '</span></div>';
+      var whenStr = e.approx ? dateStr + ' (exact time not recorded)' : dateStr + ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      return '<div class="log-row"><span class="log-day">' + iconFor(e.day) + ' ' + labelFor(e.day) + '</span><span class="log-when">' + whenStr + '</span></div>';
     }).join('');
   }
 
@@ -642,6 +727,21 @@
   var calMonthOffset = 0;
   var DOW_TO_DAY = { 2: 'day1', 4: 'day2', 5: 'day3', 6: 'day4' }; // Tue/Thu/Fri/Sat
 
+  function localDateKey(d){ return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+
+  // Built from actual completion timestamps, not the nominal Tue/Thu/Fri/Sat
+  // slots — so a workout done on a swapped day (practice got cancelled, he
+  // went to the gym instead) shows up on the real day, not the usual one.
+  function buildCompletedDateSet(){
+    var set = {};
+    Object.keys(state.completions).forEach(function(key){
+      var rec = state.completions[key];
+      var at = (rec === true) ? approxDateForKey(key) : (rec && rec.at);
+      if (isDone(rec) && at) set[localDateKey(new Date(at))] = key.split('-').pop(); // store which day-type
+    });
+    return set;
+  }
+
   function renderCalendar(){
     var grid = document.getElementById('calGrid');
     var label = document.getElementById('calMonthLabel');
@@ -656,6 +756,7 @@
     var firstDow = new Date(year, month, 1).getDay();
     var daysInMonth = new Date(year, month + 1, 0).getDate();
     var today = new Date(); today.setHours(0,0,0,0);
+    var completedSet = buildCompletedDateSet();
 
     var html = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){
       return '<div class="cal-dow">' + d + '</div>';
@@ -670,12 +771,13 @@
       var cls = 'cal-cell';
       var content = String(day);
 
-      if (dow === 0 || dow === 1 || dow === 3) {
+      var completedDay = completedSet[localDateKey(d)];
+      if (completedDay) {
+        cls += ' cal-gym-done'; content = iconFor(completedDay);
+      } else if (dow === 0 || dow === 1 || dow === 3) {
         cls += dow === 0 ? ' cal-rest' : ' cal-practice';
       } else if (DOW_TO_DAY[dow]) {
-        var rec = state.completions[isoWeekKey(d) + '-' + DOW_TO_DAY[dow]];
-        if (isDone(rec)) { cls += ' cal-gym-done'; content = '✓'; }
-        else if (d.getTime() > today.getTime()) { cls += ' cal-gym-future'; }
+        if (d.getTime() > today.getTime()) { cls += ' cal-gym-future'; }
         else { cls += ' cal-gym-pending'; }
       }
       if (isToday) cls += ' cal-today';
@@ -690,7 +792,55 @@
   if (calPrevBtn) calPrevBtn.addEventListener('click', function(){ calMonthOffset--; renderCalendar(); });
   if (calNextBtn) calNextBtn.addEventListener('click', function(){ calMonthOffset++; renderCalendar(); });
 
-  function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); renderActivityLog(); renderCalendar(); }
+  // ---- Phase suggestion (a nudge, never automatic — missed sessions
+  // shouldn't silently push someone into harder plyometrics) ----
+  function suggestedPhase(){
+    if (!state.startDate) return null;
+    var start = new Date(state.startDate + 'T00:00:00');
+    var diffDays = Math.floor((new Date() - start) / 86400000);
+    var weekNum = Math.floor(diffDays / 7) + 1;
+    if (weekNum >= 9) return '3';
+    if (weekNum >= 5) return '2';
+    return '1';
+  }
+
+  function checkPhaseSuggestion(){
+    var banner = document.getElementById('phaseSuggestBanner');
+    if (!banner) return;
+    var suggestion = suggestedPhase();
+    var show = suggestion
+      && parseInt(suggestion, 10) > parseInt(state.phase, 10)
+      && suggestion !== state.dismissedPhaseSuggestion;
+    if (show) {
+      banner.style.display = 'flex';
+      document.getElementById('phaseSuggestText').textContent =
+        'Based on your start date, you\u2019re probably ready for Phase ' + suggestion + ' \u2014 but only switch if the sessions have actually been happening.';
+      document.getElementById('phaseSuggestSwitch').setAttribute('data-target', suggestion);
+      document.getElementById('phaseSuggestDismiss').setAttribute('data-target', suggestion);
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  var phaseSwitchBtn = document.getElementById('phaseSuggestSwitch');
+  var phaseDismissBtn = document.getElementById('phaseSuggestDismiss');
+  if (phaseSwitchBtn) phaseSwitchBtn.addEventListener('click', function(){
+    if (currentRole !== 'owner') return;
+    state.phase = phaseSwitchBtn.getAttribute('data-target');
+    state.dismissedPhaseSuggestion = null;
+    applyPhase();
+    checkPhaseSuggestion();
+    saveState().then(function(){ showToast('Switched to Phase ' + state.phase); })
+      .catch(function(){ showToast("Couldn't save — check your connection"); });
+  });
+  if (phaseDismissBtn) phaseDismissBtn.addEventListener('click', function(){
+    if (currentRole !== 'owner') { document.getElementById('phaseSuggestBanner').style.display = 'none'; return; }
+    state.dismissedPhaseSuggestion = phaseDismissBtn.getAttribute('data-target');
+    checkPhaseSuggestion();
+    saveState().catch(function(){});
+  });
+
+  function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); renderActivityLog(); renderCalendar(); checkPhaseSuggestion(); }
 
   // ---- Firestore save (owner only — viewers never call this because
   // their controls are disabled, but this guard is a backstop). Returns
@@ -863,16 +1013,24 @@
     unsubscribeDoc = docRef.onSnapshot(function(snap){
       if (snap.exists) {
         var data = snap.data();
+        var normalized = normalizeCompletions(data.completions);
+        var startDate = data.startDate;
+        if (!startDate) {
+          var dates = Object.keys(normalized).map(function(k){ return normalized[k].at; }).filter(Boolean).sort();
+          startDate = dates.length ? dates[0].slice(0, 10) : new Date().toISOString().slice(0, 10);
+        }
         state = {
-          completions: data.completions || {},
+          completions: normalized,
           phase: data.phase || "1",
-          vj: data.vj || {}
+          vj: data.vj || {},
+          startDate: startDate,
+          dismissedPhaseSuggestion: data.dismissedPhaseSuggestion || null
         };
       } else if (role === 'owner') {
-        state = { completions: {}, phase: "1", vj: {} };
+        state = { completions: {}, phase: "1", vj: {}, startDate: new Date().toISOString().slice(0, 10), dismissedPhaseSuggestion: null };
         docRef.set(state);
       } else {
-        state = { completions: {}, phase: "1", vj: {} };
+        state = { completions: {}, phase: "1", vj: {}, startDate: null, dismissedPhaseSuggestion: null };
       }
       render();
     }, function(err){
