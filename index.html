@@ -140,6 +140,22 @@
   table.ex th, table.ex td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
   table.ex th { font-family: "Oswald", sans-serif; font-weight: 600; font-size: 0.76rem; color: var(--ink-soft); background: var(--surface-2); white-space: nowrap; }
   table.ex td.exname { font-weight: 500; }
+  table.ex td.exname .cue { display: block; font-weight: 400; font-size: 0.78rem; color: var(--ink-soft); margin-top: 3px; white-space: normal; }
+  table.ex td.exname .watch-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 500; color: var(--cobalt-ink); text-decoration: none; margin-top: 4px; white-space: nowrap; }
+  table.ex td.exname .watch-link:hover { text-decoration: underline; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(16px);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 100px;
+    font-size: 0.85rem; font-family: "Oswald", sans-serif; font-weight: 500;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50;
+    max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .log-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+  .log-row .log-day { font-weight: 600; }
+  .log-row .log-when { color: var(--ink-soft); }
   table.ex td .reps { color: var(--ink-soft); opacity: 0.45; transition: opacity .15s, color .15s, font-weight .15s; }
   table.ex td .reps.active { opacity: 1; font-weight: 600; }
   table.ex td .reps.active.p1 { color: var(--phase1); }
@@ -290,20 +306,20 @@
       <div class="block-label">Main strength</div>
       <div class="table-scroll">
       <table class="ex"><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr>
-        <tr><td class="exname">Smith machine squat (or leg press)</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×5</span></td><td>90s</td></tr>
-        <tr><td class="exname">Dumbbell Romanian deadlift</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
-        <tr><td class="exname">Walking dumbbell lunge</td><td><span class="reps" data-phase="1">3×10/leg</span><span class="reps" data-phase="2">3×10/leg</span><span class="reps" data-phase="3">3×8/leg (heavier)</span></td><td>60s</td></tr>
-        <tr><td class="exname">Seated leg curl machine</td><td><span class="reps" data-phase="1">3×12</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">3×10</span></td><td>60s</td></tr>
-        <tr><td class="exname">Standing calf raise machine</td><td><span class="reps" data-phase="1">3×15</span><span class="reps" data-phase="2">3×15</span><span class="reps" data-phase="3">4×12</span></td><td>45s</td></tr>
+        <tr><td class="exname">Smith machine squat (or leg press)<div class="cue">Knees track over toes; go to about parallel depth.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Smith+machine+squat+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×5</span></td><td>90s</td></tr>
+        <tr><td class="exname">Dumbbell Romanian deadlift<div class="cue">Soft knees, hinge at the hips, keep the weight close to your legs.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Dumbbell+Romanian+deadlift+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Walking dumbbell lunge<div class="cue">Front knee stacks over the ankle; torso stays upright.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Walking+dumbbell+lunge+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10/leg</span><span class="reps" data-phase="2">3×10/leg</span><span class="reps" data-phase="3">3×8/leg (heavier)</span></td><td>60s</td></tr>
+        <tr><td class="exname">Seated leg curl machine<div class="cue">Pad rests just above the heel; controlled tempo both ways.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Seated+leg+curl+machine+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×12</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">3×10</span></td><td>60s</td></tr>
+        <tr><td class="exname">Standing calf raise machine<div class="cue">Full stretch at the bottom, pause at the top.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Standing+calf+raise+machine+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×15</span><span class="reps" data-phase="2">3×15</span><span class="reps" data-phase="3">4×12</span></td><td>45s</td></tr>
       </table></div>
       <div class="block-label">Power / landing mechanics</div>
       <div class="table-scroll">
       <table class="ex"><tr><th>Drill</th><th>Sets × reps</th></tr>
-        <tr><td class="exname">Box step-off, stick the landing</td><td><span class="reps" data-phase="1">3×5</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
-        <tr><td class="exname">Broad jump, stick the landing</td><td><span class="reps" data-phase="1">3×5</span><span class="reps" data-phase="2">3×5</span><span class="reps" data-phase="3">—</span></td></tr>
-        <tr><td class="exname">Box jump (moderate height, step down)</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">4×4</span><span class="reps" data-phase="3">4×4</span></td></tr>
-        <tr><td class="exname">Depth jump (low box, immediate rebound)</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">4×4</span></td></tr>
-        <tr><td class="exname">Lateral bound, stick the landing</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">3×4/side</span><span class="reps" data-phase="3">4×4/side</span></td></tr>
+        <tr><td class="exname">Box step-off, stick the landing<div class="cue">Step off, don't jump off — the goal is a silent landing.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Box+step-off%2C+stick+the+landing+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×5</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Broad jump, stick the landing<div class="cue">Swing arms for momentum, land soft with knees bent.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Broad+jump%2C+stick+the+landing+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×5</span><span class="reps" data-phase="2">3×5</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Box jump (moderate height, step down)<div class="cue">Jump up, but always step back down — never jump down.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Box+jump+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">4×4</span><span class="reps" data-phase="3">4×4</span></td></tr>
+        <tr><td class="exname">Depth jump (low box, immediate rebound)<div class="cue">Step off, land, and rebound immediately — minimal ground contact time.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Depth+jump+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">4×4</span></td></tr>
+        <tr><td class="exname">Lateral bound, stick the landing<div class="cue">Push off one leg, land fully balanced on the other before the next rep.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Lateral+bound%2C+stick+the+landing+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">3×4/side</span><span class="reps" data-phase="3">4×4/side</span></td></tr>
       </table></div>
       <div class="block-label">Core</div>
       <p>Plank × 3 rounds (30–45s) · Cable pallof press × 3×10/side</p>
@@ -320,11 +336,11 @@
       <div class="block-label">Main strength</div>
       <div class="table-scroll">
       <table class="ex"><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr>
-        <tr><td class="exname">Dumbbell flat or incline bench press</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
-        <tr><td class="exname">Lat pulldown</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
-        <tr><td class="exname">Seated cable row</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">4×8</span></td><td>60s</td></tr>
-        <tr><td class="exname">Dumbbell shoulder press</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">3×8</span></td><td>60s</td></tr>
-        <tr><td class="exname">Assisted pull-up machine</td><td><span class="reps" data-phase="1">3×6</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">4×6</span></td><td>60s</td></tr>
+        <tr><td class="exname">Dumbbell flat or incline bench press<div class="cue">Feet flat, shoulder blades pinched together, bar/dumbbells to mid-chest.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Dumbbell+flat+or+incline+bench+press+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Lat pulldown<div class="cue">Pull to the upper chest, lead with the elbows, no leaning back.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Lat+pulldown+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Seated cable row<div class="cue">Chest up, pull to the belly button, squeeze shoulder blades together.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Seated+cable+row+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">4×8</span></td><td>60s</td></tr>
+        <tr><td class="exname">Dumbbell shoulder press<div class="cue">Brace your core, press straight up, avoid arching the lower back.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Dumbbell+shoulder+press+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">3×8</span></td><td>60s</td></tr>
+        <tr><td class="exname">Assisted pull-up machine<div class="cue">Full hang at the bottom, chin clears the bar at the top.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Assisted+pull-up+machine+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×6</span><span class="reps" data-phase="2">3×8</span><span class="reps" data-phase="3">4×6</span></td><td>60s</td></tr>
       </table></div>
       <div class="block-label">Shoulder durability</div>
       <p>Cable external rotation × 3×12/side · Cable or band face pull × 3×15 · Scapular push-up × 2×10</p>
@@ -343,12 +359,12 @@
       <div class="block-label">Power</div>
       <div class="table-scroll">
       <table class="ex"><tr><th>Drill</th><th>Sets × reps</th></tr>
-        <tr><td class="exname">Vertical jump, stick the landing</td><td><span class="reps" data-phase="1">4×5</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
-        <tr><td class="exname">Line hop, side to side (low, quiet)</td><td><span class="reps" data-phase="1">3×20s</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
-        <tr><td class="exname">Squat jump, full reset between reps</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">4×5</span><span class="reps" data-phase="3">4×5</span></td></tr>
-        <tr><td class="exname">Tuck jump</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">3×5</span><span class="reps" data-phase="3">3×6</span></td></tr>
-        <tr><td class="exname">Reactive block jump (2-ft jump + reach)</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">4×5</span></td></tr>
-        <tr><td class="exname">Single-leg hop for distance</td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">3×4/leg</span></td></tr>
+        <tr><td class="exname">Vertical jump, stick the landing<div class="cue">Land soft, knees slightly bent, fully reset before the next rep.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Vertical+jump%2C+stick+the+landing+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">4×5</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Line hop, side to side (low, quiet)<div class="cue">Stay low and quick — small, controlled hops, not big jumps.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Line+hop%2C+side+to+side+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×20s</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">—</span></td></tr>
+        <tr><td class="exname">Squat jump, full reset between reps<div class="cue">Full squat depth, explode up, land soft, pause before the next rep.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Squat+jump%2C+full+reset+between+reps+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">4×5</span><span class="reps" data-phase="3">4×5</span></td></tr>
+        <tr><td class="exname">Tuck jump<div class="cue">Drive knees up toward your chest, land quiet, reset fully.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Tuck+jump+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">3×5</span><span class="reps" data-phase="3">3×6</span></td></tr>
+        <tr><td class="exname">Reactive block jump (2-ft jump + reach)<div class="cue">Two-foot takeoff, reach at the top like closing a block.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Reactive+block+jump+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">4×5</span></td></tr>
+        <tr><td class="exname">Single-leg hop for distance<div class="cue">Stick the landing on one leg before moving again.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Single-leg+hop+for+distance+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">—</span><span class="reps" data-phase="2">—</span><span class="reps" data-phase="3">3×4/leg</span></td></tr>
       </table></div>
       <div class="block-label">Conditioning</div>
       <p>Bike, rower, or treadmill: 30s hard / 90s easy, × 6–8 rounds. Add one round every two weeks as it gets easier.</p>
@@ -367,10 +383,10 @@
       <div class="block-label">Main strength</div>
       <div class="table-scroll">
       <table class="ex"><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr>
-        <tr><td class="exname">Smith machine deadlift or hip thrust</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
-        <tr><td class="exname">Single-leg press or Bulgarian split squat</td><td><span class="reps" data-phase="1">3×10/leg</span><span class="reps" data-phase="2">3×8/leg</span><span class="reps" data-phase="3">3×6/leg</span></td><td>75s</td></tr>
-        <tr><td class="exname">Incline chest press machine</td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">4×8</span></td><td>60s</td></tr>
-        <tr><td class="exname">Single-arm dumbbell row</td><td><span class="reps" data-phase="1">3×10/side</span><span class="reps" data-phase="2">3×10/side</span><span class="reps" data-phase="3">4×8/side</span></td><td>60s</td></tr>
+        <tr><td class="exname">Smith machine deadlift or hip thrust<div class="cue">Flat back, drive through the heels, squeeze glutes at the top.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Smith+machine+deadlift+or+hip+thrust+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">4×8</span><span class="reps" data-phase="3">4×6</span></td><td>90s</td></tr>
+        <tr><td class="exname">Single-leg press or Bulgarian split squat<div class="cue">Back foot elevated; the front leg does essentially all the work.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Single-leg+press+or+Bulgarian+split+squat+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10/leg</span><span class="reps" data-phase="2">3×8/leg</span><span class="reps" data-phase="3">3×6/leg</span></td><td>75s</td></tr>
+        <tr><td class="exname">Incline chest press machine<div class="cue">Handles to upper-chest level, control the weight on the way down.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Incline+chest+press+machine+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10</span><span class="reps" data-phase="2">3×10</span><span class="reps" data-phase="3">4×8</span></td><td>60s</td></tr>
+        <tr><td class="exname">Single-arm dumbbell row<div class="cue">Flat back, pull the elbow back past your hip.</div><a class="watch-link" href="https://www.youtube.com/results?search_query=Single-arm+dumbbell+row+proper+form" target="_blank" rel="noopener">▶ Watch form</a></td><td><span class="reps" data-phase="1">3×10/side</span><span class="reps" data-phase="2">3×10/side</span><span class="reps" data-phase="3">4×8/side</span></td><td>60s</td></tr>
       </table></div>
       <div class="block-label">Mobility focus</div>
       <p>90/90 hip stretch × 60s/side · Ankle dorsiflexion rock × 10/side · Thoracic spine rotation × 10/side</p>
@@ -420,11 +436,19 @@
   <p class="vj-delta" id="vjDelta"></p>
 </section>
 
+<section>
+  <div class="section-head"><span class="section-num">10</span><h2>Activity log</h2></div>
+  <p>Every time a day gets marked complete, it shows up here with a date and time — the clearest way to confirm something actually saved, especially on spotty gym wifi.</p>
+  <div id="activityLog"></div>
+</section>
+
 <footer>
   Built for Sean — pair this with consistent sleep (8–10 hrs for a developing athlete) and regular meals with enough protein to support recovery. If anything here conflicts with guidance from a team athletic trainer, physical therapist, or doctor, defer to them.
 </footer>
 
 </div>
+
+<div id="toast" class="toast"></div>
 
 <script>
 (function(){
@@ -456,6 +480,12 @@
   var auth = firebase.auth();
   var db = firebase.firestore();
   var provider = new firebase.auth.GoogleAuthProvider();
+
+  // Keep working (and queue writes) through flaky gym wifi/cell signal \u2014
+  // this is the main fix for "sometimes marking complete doesn't stick."
+  db.enablePersistence().catch(function(err){
+    console.warn('Offline persistence not enabled:', err.code);
+  });
 
   var state = { completions: {}, phase: "1", vj: {} };
   var currentUser = null;
@@ -492,10 +522,13 @@
     });
   }
 
+  function isDone(rec){ return !!(rec && rec.done); }
+
   function refreshButtons(){
     document.querySelectorAll('.complete-btn').forEach(function(btn){
+      if (btn.dataset.pending === 'true') return; // leave "Saving..." alone mid-flight
       var day = btn.getAttribute('data-day');
-      var done = !!state.completions[completionKey(day)];
+      var done = isDone(state.completions[completionKey(day)]);
       btn.setAttribute('data-done', done ? 'true' : 'false');
       btn.innerHTML = done ? '<span class="check">✓</span>Completed — tap to undo' : '<span class="check">✓</span>Mark ' + labelFor(day) + ' complete';
     });
@@ -504,11 +537,46 @@
   function updateStats(){
     var days = ['day1','day2','day3','day4'];
     var doneThisWeek = 0;
-    days.forEach(function(d){ if (state.completions[completionKey(d)]) doneThisWeek++; });
+    days.forEach(function(d){ if (isDone(state.completions[completionKey(d)])) doneThisWeek++; });
     document.getElementById('statWeek').textContent = doneThisWeek + ' / 4';
     var total = 0;
-    Object.keys(state.completions).forEach(function(k){ if (state.completions[k]) total++; });
+    Object.keys(state.completions).forEach(function(k){ if (isDone(state.completions[k])) total++; });
     document.getElementById('statTotal').textContent = total;
+  }
+
+  function renderActivityLog(){
+    var el = document.getElementById('activityLog');
+    if (!el) return;
+    var entries = [];
+    Object.keys(state.completions).forEach(function(key){
+      var rec = state.completions[key];
+      if (isDone(rec) && rec.at) {
+        var day = key.split('-').pop();
+        entries.push({ day: day, at: rec.at });
+      }
+    });
+    entries.sort(function(a,b){ return new Date(b.at) - new Date(a.at); });
+    entries = entries.slice(0, 12);
+    if (!entries.length) {
+      el.innerHTML = '<p style="color:var(--ink-soft);font-size:0.9rem;">No completed sessions logged yet.</p>';
+      return;
+    }
+    el.innerHTML = entries.map(function(e){
+      var d = new Date(e.at);
+      var dateStr = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      var timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      return '<div class="log-row"><span class="log-day">' + labelFor(e.day) + '</span><span class="log-when">' + dateStr + ' · ' + timeStr + '</span></div>';
+    }).join('');
+  }
+
+  var toastTimer = null;
+  function showToast(msg){
+    var el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2400);
   }
 
   function updateVjInputs(){
@@ -531,14 +599,14 @@
     el.innerHTML = 'Change from Week 1 baseline: <b>' + sign + delta.toFixed(1) + '"</b>';
   }
 
-  function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); }
+  function render(){ applyPhase(); refreshButtons(); updateStats(); updateVjInputs(); renderActivityLog(); }
 
-  // ---- Firestore save (owner only \u2014 viewers never call this because
-  // their controls are disabled, but this guard is a backstop) ----
+  // ---- Firestore save (owner only — viewers never call this because
+  // their controls are disabled, but this guard is a backstop). Returns
+  // a real promise so callers can show saving/saved/failed feedback. ----
   function saveState(){
-    if (!currentUser || currentRole !== 'owner') return;
-    db.collection('trackerData').doc(SHARED_DOC_ID).set(state, { merge: false })
-      .catch(function(err){ console.error('Save failed', err); });
+    if (!currentUser || currentRole !== 'owner') return Promise.reject(new Error('not owner'));
+    return db.collection('trackerData').doc(SHARED_DOC_ID).set(state, { merge: false });
   }
 
   // ---- Day accordions (always available, even signed out) ----
@@ -564,25 +632,53 @@
       if (btn.disabled) return;
       state.phase = btn.getAttribute('data-phase');
       applyPhase();
-      saveState();
+      saveState()
+        .then(function(){ showToast('Phase saved'); })
+        .catch(function(){ showToast("Couldn't save — check your connection"); });
     });
   });
 
   // ---- Complete buttons ----
+  // Shows Saving... immediately, then a clear Saved/Failed result, so a
+  // flaky connection is visible instead of silently not sticking.
   document.querySelectorAll('.complete-btn').forEach(function(btn){
     btn.addEventListener('click', function(e){
       e.stopPropagation();
-      if (btn.disabled) return;
+      if (btn.disabled || btn.dataset.pending === 'true') return;
+
       var day = btn.getAttribute('data-day');
       var key = completionKey(day);
-      state.completions[key] = !state.completions[key];
-      refreshButtons();
+      var wasDone = isDone(state.completions[key]);
+
+      if (wasDone) {
+        delete state.completions[key];
+      } else {
+        state.completions[key] = { done: true, at: new Date().toISOString() };
+      }
       updateStats();
-      saveState();
+      renderActivityLog();
+
+      btn.dataset.pending = 'true';
+      btn.disabled = true;
+      btn.innerHTML = 'Saving…';
+
+      saveState().then(function(){
+        btn.dataset.pending = 'false';
+        btn.disabled = (currentRole !== 'owner');
+        refreshButtons();
+        showToast((wasDone ? labelFor(day) + ' marked incomplete' : labelFor(day) + ' saved'));
+      }).catch(function(err){
+        console.error('Save failed', err);
+        btn.dataset.pending = 'false';
+        btn.disabled = (currentRole !== 'owner');
+        btn.innerHTML = '<span class="check">⚠</span>Not saved — tap to retry';
+        showToast("Couldn't save — check your connection and try again");
+      });
     });
   });
 
-  // ---- Vertical jump inputs ----
+  // ---- Vertical jump inputs (debounced so it doesn't save on every keystroke) ----
+  var vjSaveTimers = {};
   ['vj1','vj4','vj8','vj12'].forEach(function(id){
     var el = document.getElementById(id);
     if (!el) return;
@@ -590,7 +686,12 @@
       if (el.disabled) return;
       state.vj[id] = el.value;
       updateVjDelta();
-      saveState();
+      clearTimeout(vjSaveTimers[id]);
+      vjSaveTimers[id] = setTimeout(function(){
+        saveState()
+          .then(function(){ showToast('Vertical jump saved'); })
+          .catch(function(){ showToast("Couldn't save — check your connection"); });
+      }, 700);
     });
   });
 
