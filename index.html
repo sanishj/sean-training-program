@@ -596,11 +596,11 @@
   // format and estimate a date for it, so nothing from before gets lost. ----
   var DAY_OFFSET_FROM_MONDAY = { day1: 1, day2: 3, day3: 4, day4: 5 }; // Tue/Thu/Fri/Sat
   function mondayOfIsoWeek(year, week){
-    var jan4 = new Date(Date.UTC(year, 0, 4));
-    var jan4Dow = jan4.getUTCDay() || 7;
-    var monday = new Date(jan4);
-    monday.setUTCDate(jan4.getUTCDate() - jan4Dow + 1 + (week - 1) * 7);
-    return monday;
+    // Local-time construction (not UTC) so this matches the calendar
+    // grid and date keys elsewhere, which are all local-time too.
+    var jan4 = new Date(year, 0, 4);
+    var jan4Dow = jan4.getDay() || 7;
+    return new Date(year, 0, 4 - jan4Dow + 1 + (week - 1) * 7);
   }
   function approxDateForKey(key){
     var parts = key.split('-'); // ["2026","W05","day1"]
@@ -608,7 +608,8 @@
     var week = parseInt(parts[1].slice(1), 10);
     var offset = DAY_OFFSET_FROM_MONDAY[parts[2]] || 0;
     var d = mondayOfIsoWeek(year, week);
-    d.setUTCDate(d.getUTCDate() + offset);
+    d.setDate(d.getDate() + offset);
+    d.setHours(12, 0, 0, 0); // anchor at local noon so storing/reading back never crosses a day boundary
     return d.toISOString();
   }
   function normalizeCompletions(raw){
@@ -618,7 +619,10 @@
       if (rec === true) {
         out[key] = { done: true, at: approxDateForKey(key), approx: true };
       } else if (rec && rec.done) {
-        out[key] = rec;
+        // approx-flagged entries have no real captured time, so it's
+        // always safe (and necessary, to self-heal past bad values) to
+        // recompute them fresh rather than trust whatever was last saved.
+        out[key] = rec.approx ? { done: true, at: approxDateForKey(key), approx: true } : rec;
       }
     });
     return out;
