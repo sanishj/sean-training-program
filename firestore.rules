@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Keep these emails in sync with OWNER_EMAIL / VIEWER_EMAILS in index.html.
+    match /trackerData/{docId} {
+      allow read:  if request.auth != null
+                   && (request.auth.token.email == "onlyseanjohn@gmail.com"
+                       || request.auth.token.email in ["sanishj@gmail.com"]);
+      allow write: if request.auth != null
+                   && request.auth.token.email == "onlyseanjohn@gmail.com";
+    }
+  }
+}

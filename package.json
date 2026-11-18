@@ -1,0 +1,9 @@
+{
+  "name": "sean-training-program",
+  "private": true,
+  "description": "Sean's 12-week Middle Blocker training tracker (GitHub Pages + Firebase)",
+  "scripts": {
+    "serve": "npx --yes http-server@14.1.1 . -p 5500 -c-1",
+    "deploy:rules": "firebase deploy --only firestore:rules"
+  }
+}

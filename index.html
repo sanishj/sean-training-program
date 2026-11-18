@@ -242,6 +242,7 @@
   .vj-delta b { color: var(--ok); }
 
   footer { padding: 28px 0 10px; color: var(--ink-soft); font-size: 0.85rem; }
+  .test-badge { position: fixed; top: calc(8px + env(safe-area-inset-top)); right: 8px; z-index: 9999; background: #c62828; color: #fff; font: 600 0.75rem/1 "Oswald", sans-serif; letter-spacing: 0.05em; padding: 6px 10px; border-radius: 4px; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -542,7 +543,16 @@
   // =====================================================================
   var OWNER_EMAIL = "onlyseanjohn@gmail.com";
   var VIEWER_EMAILS = ["sanishj@gmail.com"];
-  var SHARED_DOC_ID = "sean"; // one shared record both of you read from
+  // Local testing (localhost) uses a separate "sean-dev" record so test
+  // clicks never touch Sean's real history. The live site always uses "sean".
+  var IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  var SHARED_DOC_ID = IS_LOCAL ? "sean-dev" : "sean"; // one shared record both of you read from
+  if (IS_LOCAL) {
+    var badge = document.createElement('div');
+    badge.className = 'test-badge';
+    badge.textContent = 'TEST DATA (sean-dev)';
+    document.body.appendChild(badge);
+  }
 
   firebase.initializeApp(firebaseConfig);
   var auth = firebase.auth();
